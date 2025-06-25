@@ -1,6 +1,8 @@
 import os
+import tempfile
+
 # ✅ Fix for MediaPipe PermissionError on Streamlit Cloud
-os.environ["MEDIAPIPE_CACHE_DIR"] = os.path.join(os.getcwd(), ".mp_cache")
+os.environ["MEDIAPIPE_CACHE_DIR"] = tempfile.mkdtemp(prefix="mp_cache_")
 
 import cv2
 import mediapipe as mp
@@ -13,7 +15,7 @@ from io import BytesIO
 import pandas as pd
 import gc
 
-# MediaPipe setup (pose will be initialized later)
+# Setup MediaPipe reference (delay actual pose init)
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 
@@ -36,7 +38,7 @@ class VideoTransformer(VideoTransformerBase):
     def __init__(self):
         self.left_angle = 0
         self.right_angle = 0
-        # ✅ Delayed model initialization
+        # ✅ Initialize pose model here, after env is set
         self.pose = mp_pose.Pose(static_image_mode=False, model_complexity=0, smooth_landmarks=False)
 
     def transform(self, frame):
