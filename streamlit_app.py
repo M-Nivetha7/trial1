@@ -1,5 +1,5 @@
 import os
-# 🛠️ Fix for MediaPipe PermissionError
+# ✅ Fix for MediaPipe PermissionError on Streamlit Cloud
 os.environ["MEDIAPIPE_CACHE_DIR"] = os.path.join(os.getcwd(), ".mp_cache")
 
 import cv2
@@ -13,9 +13,8 @@ from io import BytesIO
 import pandas as pd
 import gc
 
-# Initialize MediaPipe Pose (optimized)
+# MediaPipe setup (pose will be initialized later)
 mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(static_image_mode=False, model_complexity=0, smooth_landmarks=False)
 mp_drawing = mp.solutions.drawing_utils
 
 important_body_indices = [
@@ -37,18 +36,19 @@ class VideoTransformer(VideoTransformerBase):
     def __init__(self):
         self.left_angle = 0
         self.right_angle = 0
+        # ✅ Delayed model initialization
+        self.pose = mp_pose.Pose(static_image_mode=False, model_complexity=0, smooth_landmarks=False)
 
     def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")
         img = cv2.flip(img, 1)
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        results = pose.process(rgb)
+        results = self.pose.process(rgb)
 
         if results.pose_landmarks:
             mp_drawing.draw_landmarks(img, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
             landmarks = results.pose_landmarks.landmark
 
-            # Calculate angles
             left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x * img.shape[1],
                              landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y * img.shape[0]]
             left_elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x * img.shape[1],
@@ -170,7 +170,6 @@ def main():
             mins, secs = divmod(elapsed, 60)
             timer_placeholder.markdown(f"⏳ **Session Time:** {mins:02d}:{secs:02d}")
 
-            # Clean up
             buf_left.close()
             buf_right.close()
             if elapsed % 10 == 0:
