@@ -1,3 +1,7 @@
+import os
+# 🛠️ Fix for MediaPipe PermissionError
+os.environ["MEDIAPIPE_CACHE_DIR"] = os.path.join(os.getcwd(), ".mp_cache")
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -166,7 +170,7 @@ def main():
             mins, secs = divmod(elapsed, 60)
             timer_placeholder.markdown(f"⏳ **Session Time:** {mins:02d}:{secs:02d}")
 
-            # Release memory
+            # Clean up
             buf_left.close()
             buf_right.close()
             if elapsed % 10 == 0:
